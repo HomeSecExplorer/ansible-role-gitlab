@@ -1,0 +1,5 @@
+---
+- name: H_hsegl_restart_gitlab
+  ansible.builtin.command: gitlab-ctl reconfigure
+  register: __hsegl_restart
+  failed_when: "'gitlab Reconfigured' not in __hsegl_restart.stdout"

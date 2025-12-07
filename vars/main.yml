@@ -1,0 +1,7 @@
+---
+__hsegl_dependencies:
+  - openssh-server
+  - postfix
+  - curl
+  - openssl
+  - tzdata

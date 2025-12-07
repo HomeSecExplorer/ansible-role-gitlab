@@ -1,0 +1,69 @@
+---
+- name: Construct simplified OS identifier
+  ansible.builtin.set_fact:
+    os_identifier: "{{ ansible_facts.distribution | lower }}-{{ ansible_facts.distribution_version if ansible_facts.distribution | lower == 'ubuntu' else ansible_facts.distribution_major_version }}"
+
+- name: Check OS version and family
+  ansible.builtin.assert:
+    that:
+      - os_identifier in [
+          "debian-13",
+          "ubuntu-24.04"
+        ]
+    fail_msg: >-
+      This role can only be run against supported OSs.
+      {{ os_identifier }} is not supported.
+    success_msg: >-
+      This role is running against a supported OS: {{ os_identifier }}
+  when: (hseau_os_check | default(true)) | bool
+
+- name: Load OS-specific vars
+  ansible.builtin.include_vars:
+    file: "{{ ansible_os_family | lower }}.yml"
+
+- name: Check if GitLab configuration file exists
+  ansible.builtin.stat:
+    path: "/etc/gitlab/gitlab.rb"
+  register: __hsegl_config_file
+
+- name: Check if GitLab is installed
+  ansible.builtin.stat:
+    path: "/usr/bin/gitlab-ctl"
+  register: __hsegl_file
+
+- name: Include installation tasks if GitLab is not present
+  ansible.builtin.include_tasks:
+    file: "install.yml"
+  when: not __hsegl_file.stat.exists
+
+- name: Reconfigure GitLab (first run)
+  ansible.builtin.command:
+    cmd: gitlab-ctl reconfigure
+    creates: "/var/opt/gitlab/bootstrapped"
+  failed_when: false
+
+- name: Create GitLab SSL folder
+  ansible.builtin.file:
+    path: "/etc/gitlab/ssl"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "0700"
+  when: hsegl_create_self_signed_cert
+
+- name: Create self-signed certificate
+  ansible.builtin.command:
+    cmd: >
+      openssl req -new -nodes -x509 -subj "{{ hsegl_self_signed_cert_subj }}"
+      -days {{ hsegl_self_signed_cert_duration }} -keyout {{ hsegl_ssl_certificate_key }} -out {{ hsegl_ssl_certificate }} -extensions v3_ca
+    creates: "{{ hsegl_ssl_certificate }}"
+  when: hsegl_create_self_signed_cert
+
+- name: Copy GitLab config file
+  ansible.builtin.template:
+    src: "{{ hsegl_config_template }}"
+    dest: "/etc/gitlab/gitlab.rb"
+    owner: "root"
+    group: "root"
+    mode: "0600"
+  notify: H_hsegl_restart_gitlab

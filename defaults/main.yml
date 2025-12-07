@@ -1,0 +1,88 @@
+---
+# Role control switches
+hsegl_os_check: true  # Check if the OS is supported before continuing. (Role support)
+hsegl_config_template: "gitlab.rb.j2"  # Jinja2 template file used to render /etc/gitlab/gitlab.rb
+
+# General config
+hsegl_domain: "gitlab.example.com"  # FQDN that GitLab will use internally and in generated links
+hsegl_external_url: "https://{{ hsegl_domain }}/"  # Public URL for GitLab, must include scheme and trailing slash
+hsegl_edition: "gitlab-ce"  # GitLab edition package name (for example gitlab-ce or gitlab-ee)
+hsegl_version: ''  # Optional package version string; leave empty to install the latest available version
+hsegl_backup_path: "/var/opt/gitlab/backups"  # Directory where gitlab-rake backups will be stored
+
+# SSL Configuration
+hsegl_http_redirect: true  # If true, redirect HTTP traffic to HTTPS using GitLab's bundled NGINX
+hsegl_ssl_certificate: "/etc/gitlab/ssl/{{ hsegl_domain }}.crt"  # Path to the TLS certificate used by GitLab NGINX
+hsegl_ssl_certificate_key: "/etc/gitlab/ssl/{{ hsegl_domain }}.key"  # Path to the TLS private key used by GitLab NGINX
+
+# SSL Self-signed Certificate Configuration
+hsegl_create_self_signed_cert: true  # When true, generate a local self-signed certificate if no real certificate is provided
+hsegl_self_signed_cert_subj: "/C=US/ST=New York/L=New York/O=IT/CN={{ hsegl_domain }}"  # OpenSSL subject string for the self-signed certificate
+hsegl_self_signed_cert_duration: "3650"  # Validity of the self-signed certificate in days
+
+# LDAP Configuration
+hsegl_ldap_enabled: false  # Enable LDAP authentication in GitLab when true
+hsegl_ldap_host: "example.com"  # LDAP server hostname or IP
+hsegl_ldap_port: "389"  # LDAP server port (389 for plain, 636 for LDAPS)
+hsegl_ldap_uid: "sAMAccountName"  # LDAP attribute used as the login username
+hsegl_ldap_method: "plain"  # LDAP connection method (plain, ssl, or start_tls)
+hsegl_ldap_bind_dn: "CN=Username,CN=Users,DC=example,DC=com"  # Bind DN used to search and authenticate users
+hsegl_ldap_password: "password"  # Password for the bind DN account
+hsegl_ldap_base: "DC=example,DC=com"  # Base DN used for LDAP user lookups
+
+# SMTP Configuration
+hsegl_smtp_enable: false  # Enable outbound email via SMTP when true
+hsegl_smtp_address: "smtp.server"  # SMTP server hostname or IP
+hsegl_smtp_port: "465"  # SMTP server port (for example 25, 465, or 587)
+hsegl_smtp_user_name: "smtp user"  # SMTP username used for authentication
+hsegl_smtp_password: "smtp password"  # SMTP password used for authentication
+hsegl_smtp_domain: "example.com"  # HELO/EHLO domain GitLab will present to the SMTP server
+hsegl_smtp_authentication: "login"  # SMTP auth mechanism (for example login, plain or cram_md5)
+hsegl_smtp_enable_starttls_auto: true  # Automatically upgrade the SMTP connection to TLS using STARTTLS when supported
+hsegl_smtp_tls: false  # If true, force SMTPS TLS connection instead of plain or STARTTLS
+hsegl_smtp_openssl_verify_mode: "none"  # OpenSSL certificate verification mode (for example none or peer)
+hsegl_smtp_ca_path: "/etc/ssl/certs"  # Directory that contains CA certificates for SMTP TLS verification
+hsegl_smtp_ca_file: "/etc/ssl/certs/ca-certificates.crt"  # Single file bundle of CA certificates for SMTP TLS verification
+
+# Optional settings
+hsegl_time_zone: "UTC"  # Default time zone used by GitLab Rails
+hsegl_backup_keep_time: "604800"  # How long to keep GitLab backups in seconds (604800 seconds is 7 days)
+hsegl_download_validate_certs: true  # When true, validate TLS certificates while downloading GitLab packages
+hsegl_default_theme: '2'  # Default GitLab UI theme ID for new users
+
+# Email configuration
+hsegl_email_enabled: false  # When true, configure GitLab system notification email settings
+hsegl_email_from: "gitlab@example.com"  # From address used in system emails sent by GitLab
+hsegl_email_display_name: "Gitlab"  # Display name shown for the From address
+hsegl_email_reply_to: "gitlab@example.com"  # Reply-To address used in system emails
+
+# Registry configuration
+hsegl_registry_enable: false  # Enable the integrated GitLab Container Registry when true
+hsegl_registry_external_url: "https://{{ hsegl_domain }}:4567"  # External URL for the GitLab Container Registry
+hsegl_registry_nginx_ssl_certificate: "/etc/gitlab/ssl/gitlab.crt"  # TLS certificate file used by the registry NGINX virtual host
+hsegl_registry_nginx_ssl_certificate_key: "/etc/gitlab/ssl/gitlab.key"  # TLS private key used by the registry NGINX virtual host
+
+# LetsEncrypt/ACME configuration
+hsegl_letsencrypt_enable: false  # Enable GitLab built in Let's Encrypt certificate management when true
+hsegl_letsencrypt_staging_endpoint: ""  # Optional custom ACME staging endpoint; leave empty to use GitLab default
+hsegl_letsencrypt_production_endpoint: ""  # Optional custom ACME production endpoint; leave empty to use GitLab default
+hsegl_letsencrypt_contact_emails: ["gitlab@example.com"]  # List of contact email addresses sent to the ACME provider
+hsegl_letsencrypt_auto_renew_hour: 1  # Hour of day when GitLab should run certificate auto renewals (0-23)
+hsegl_letsencrypt_auto_renew_minute: 30  # Minute of the hour when auto renewal should run (0-59)
+hsegl_letsencrypt_auto_renew_day_of_month: "*/7"  # Cron-style day of month pattern for certificate renewals
+hsegl_letsencrypt_auto_renew: true  # Enable the periodic Let's Encrypt auto renewal job
+
+# NGINX configuration
+# hsegl_nginx_listen_port: "80"  # Custom HTTP listen port for the bundled NGINX virtual host
+hsegl_nginx_listen_https: true  # Control whether the NGINX virtual host listens on HTTPS
+
+hsegl_extra_settings:  # Free form list of additional sections and key/value pairs to append to gitlab.rb
+  - puma:
+      - key: "worker_processes"  # Additional Puma setting name
+        value: 4  # Value to assign to the Puma setting
+  - sidekiq:
+      - key: "concurrency"  # Additional Sidekiq setting name
+        value: 18  # Value to assign to the Sidekiq setting
+  - prometheus_monitoring:
+      - key: "enable"  # Additional Prometheus monitoring setting name
+        value: true  # Value to assign to the Prometheus monitoring setting

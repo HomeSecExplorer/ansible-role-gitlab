@@ -1,0 +1,68 @@
+---
+name: CI
+'on':
+  # pull_request:
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: 'homesecexplorer.gitlab'
+
+jobs:
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v6
+        with:
+          path: 'homesecexplorer.gitlab'
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install test dependencies
+        run: pip3 install yamllint ansible-lint
+
+      - name: Run yamllint
+        run: |
+          yamllint .
+
+      - name: Run ansible-lint
+        run: |
+          ansible-lint
+
+  molecule:
+    name: Molecule
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distro:
+          - ubuntu2404
+          - debian13
+
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v6
+        with:
+          path: 'homesecexplorer.gitlab'
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install test dependencies
+        run: pip3 install ansible molecule molecule-plugins[docker] docker
+
+      - name: Run Molecule tests
+        run: molecule test
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'
+          MOLECULE_DISTRO: ${{ matrix.distro }}

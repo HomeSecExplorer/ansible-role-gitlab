@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  author: HomeSec Explorer
+  description: >
+    Ansible role to install and configure GitLab Omnibus with HTTPS (self-signed or LetsEncrypt/ACME),
+    LDAP and SMTP integration, and optional Container Registry support.
+  role_name: gitlab
+  namespace: HomeSecExplorer
+  license: MIT
+  min_ansible_version: '2.13'
+
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+    - name: Ubuntu
+      versions:
+        - noble
+
+  galaxy_tags:
+    - development
+    - web
+    - gitlab
+    - git
+    - repository
+    - ci
+    - integration
+
+dependencies: []

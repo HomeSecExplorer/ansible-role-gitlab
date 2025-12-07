@@ -1,0 +1,110 @@
+# The URL through which GitLab will be accessed.
+external_url "{{ hsegl_external_url }}"
+
+# GitLab Nginx
+## See https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/nginx.md
+{% if hsegl_nginx_listen_port is defined %}
+nginx['listen_port'] = "{{ hsegl_nginx_listen_port }}"
+{% endif %}
+nginx['listen_https'] = {{ hsegl_nginx_listen_https | lower }}
+
+# Configuration
+gitlab_rails['time_zone'] = "{{ hsegl_time_zone }}"
+gitlab_rails['backup_keep_time'] = {{ hsegl_backup_keep_time }}
+gitlab_rails['gitlab_email_enabled'] = {{ hsegl_email_enabled | lower }}
+{% if hsegl_email_enabled %}
+gitlab_rails['gitlab_email_from'] = "{{ hsegl_email_from }}"
+gitlab_rails['gitlab_email_display_name'] = "{{ hsegl_email_display_name }}"
+gitlab_rails['gitlab_email_reply_to'] = "{{ hsegl_email_reply_to }}"
+{% endif %}
+
+# Default Theme
+gitlab_rails['gitlab_default_theme'] = "{{ hsegl_default_theme }}"
+
+# Redirect http to https.
+nginx['redirect_http_to_https'] = {{ hsegl_http_redirect | lower }}
+nginx['ssl_certificate'] = "{{ hsegl_ssl_certificate }}"
+nginx['ssl_certificate_key'] = "{{ hsegl_ssl_certificate_key }}"
+
+{% if hsegl_letsencrypt_enable and not hsegl_create_self_signed_cert %}
+letsencrypt['enable'] = {{ hsegl_letsencrypt_enable | lower }}
+{% if hsegl_letsencrypt_staging_endpoint|length > 0 %}
+letsencrypt['acme_staging_endpoint'] = "{{ hsegl_letsencrypt_staging_endpoint }}"
+{% endif %}
+{% if hsegl_letsencrypt_production_endpoint|length > 0 %}
+letsencrypt['acme_production_endpoint'] = "{{ hsegl_letsencrypt_production_endpoint }}"
+{% endif %}
+letsencrypt['contact_emails'] = {{ hsegl_letsencrypt_contact_emails | to_json }}
+letsencrypt['auto_renew_hour'] = "{{ hsegl_letsencrypt_auto_renew_hour }}"
+letsencrypt['auto_renew_minute'] = "{{ hsegl_letsencrypt_auto_renew_minute }}"
+letsencrypt['auto_renew_day_of_month'] = "{{ hsegl_letsencrypt_auto_renew_day_of_month }}"
+letsencrypt['auto_renew'] = {{ hsegl_letsencrypt_auto_renew | lower }}
+{% endif %}
+
+# The directory where Gitlab backups will be stored
+gitlab_rails['backup_path'] = "{{ hsegl_backup_path }}"
+
+# https://gitlab.com/gitlab-org/gitlab-ce/blob/master/config/gitlab.yml.example#L118
+gitlab_rails['ldap_enabled'] = {{ hsegl_ldap_enabled | lower }}
+{% if hsegl_ldap_enabled %}
+gitlab_rails['ldap_host'] = '{{ hsegl_ldap_host }}'
+gitlab_rails['ldap_port'] = {{ hsegl_ldap_port }}
+gitlab_rails['ldap_uid'] = '{{ hsegl_ldap_uid }}'
+gitlab_rails['ldap_method'] = '{{ hsegl_ldap_method}}' # 'ssl' or 'plain'
+gitlab_rails['ldap_bind_dn'] = '{{ hsegl_ldap_bind_dn }}'
+gitlab_rails['ldap_password'] = '{{ hsegl_ldap_password }}'
+gitlab_rails['ldap_allow_username_or_email_login'] = true
+gitlab_rails['ldap_base'] = '{{ hsegl_ldap_base }}'
+{% endif %}
+
+# https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/doc/settings/smtp.md
+gitlab_rails['smtp_enable'] = {{ hsegl_smtp_enable | lower }}
+{% if hsegl_smtp_enable %}
+gitlab_rails['smtp_address'] = '{{ hsegl_smtp_address }}'
+gitlab_rails['smtp_port'] = {{ hsegl_smtp_port }}
+{% if hsegl_smtp_user_name %}
+gitlab_rails['smtp_user_name'] = '{{ hsegl_smtp_user_name }}'
+{% endif %}
+{% if hsegl_smtp_password %}
+gitlab_rails['smtp_password'] = '{{ hsegl_smtp_password }}'
+{% endif %}
+gitlab_rails['smtp_domain'] = '{{ hsegl_smtp_domain }}'
+{% if hsegl_smtp_authentication %}
+gitlab_rails['smtp_authentication'] = '{{ hsegl_smtp_authentication }}'
+{% endif %}
+gitlab_rails['smtp_enable_starttls_auto'] = {{ hsegl_smtp_enable_starttls_auto | lower }}
+gitlab_rails['smtp_tls'] = {{ hsegl_smtp_tls | lower }}
+gitlab_rails['smtp_openssl_verify_mode'] = '{{ hsegl_smtp_openssl_verify_mode }}'
+gitlab_rails['smtp_ca_path'] = '{{ hsegl_smtp_ca_path }}'
+gitlab_rails['smtp_ca_file'] = '{{ hsegl_smtp_ca_file }}'
+{% endif %}
+
+# GitLab registry.
+registry['enable'] = {{ hsegl_registry_enable | lower }}
+{% if hsegl_registry_enable %}
+registry_external_url "{{ hsegl_registry_external_url }}"
+registry_nginx['ssl_certificate'] = "{{ hsegl_registry_nginx_ssl_certificate }}"
+registry_nginx['ssl_certificate_key'] = "{{ hsegl_registry_nginx_ssl_certificate_key }}"
+{% endif %}
+
+{% if hsegl_extra_settings is defined %}
+# Extra configuration
+{% for extra in hsegl_extra_settings %}
+{% for setting in extra %}
+{% for kv in extra[setting] %}
+{% if kv.type is defined and kv.type == 'plain' %}
+{{ setting }}['{{ kv.key }}'] = {{ kv.value }}
+{% elif kv.value is boolean %}
+{{ setting }}['{{ kv.key }}'] = {{ kv.value | lower }}
+{% elif kv.value is not string %}
+{{ setting }}['{{ kv.key }}'] = {{ kv.value }}
+{% else %}
+{{ setting }}['{{ kv.key }}'] = '{{ kv.value }}'
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+# For more settings, see:
+# https://gitlab.com/gitlab-org/omnibus-gitlab/blob/master/README.md#changing-gitlab-yml-settings

@@ -1,0 +1,3 @@
+---
+__hsegl_package_version_separator: '='
+__hsegl_repo_install_script_url: "https://packages.gitlab.com/install/repositories/gitlab/{{ hsegl_edition }}/script.deb.sh"
