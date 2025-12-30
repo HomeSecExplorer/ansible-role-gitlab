@@ -15,7 +15,7 @@
       {{ os_identifier }} is not supported.
     success_msg: >-
       This role is running against a supported OS: {{ os_identifier }}
-  when: (hseau_os_check | default(true)) | bool
+  when: (hsegl_os_check | default(true)) | bool
 
 - name: Load OS-specific vars
   ansible.builtin.include_vars:
